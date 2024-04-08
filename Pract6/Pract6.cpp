@@ -25,6 +25,11 @@ static float gradosPinyon =		0.0F;
 static float gradosPinyonMin =	0.0F;
 static float gradosCamara =		0.0F;
 
+// Velocidades engranajes en rad/s
+static const float vel_min = 0.001745F; 
+static const float vel_seg = 0.10572F;  
+
+
 // Parametros de los engranajes
 #define MODULO			0.04F
 
@@ -33,21 +38,129 @@ static float gradosCamara =		0.0F;
 #define DIAM_PRIM_GRAN  (float)(MODULO * N_DIENTES_GRAN)
 #define DIAM_EXT_GRAN	(float)(DIAM_PRIM_GRAN + 2.0F*MODULO)
 #define DIAM_EJE_GRAN	(float)(DIAM_PRIM_GRAN - 60.32F*MODULO)
-#define H_DIENTE_GRAN	(float)(1.16F * MODULO)
 
 // Parametros del engranaje mediano
 #define N_DIENTES_MED   35
 #define DIAM_PRIM_MED   (float)(MODULO * N_DIENTES_MED)
 #define DIAM_EXT_MED	(float)(DIAM_PRIM_MED + 2.0F*MODULO)
 #define DIAM_EJE_MED	(float)(DIAM_PRIM_MED - 30.32F*MODULO)
-#define H_DIENTE_MED	(float)(1.16F * MODULO)
 
 // Parametros del engranaje pequenyo (pinyon de segundos)
-#define N_DIENTES_PEQ   15
+//#define N_DIENTES_PEQ   (int)sqrt(vel_min*DIAM_PRIM_GRAN*DIAM_PRIM_MED / vel_seg)
+#define N_DIENTES_PEQ   7
 #define DIAM_PRIM_PEQ   (float)(MODULO * N_DIENTES_PEQ)
 #define DIAM_EXT_PEQ	(float)(DIAM_PRIM_PEQ + 2.0F*MODULO)
 #define DIAM_EJE_PEQ	(float)(DIAM_PRIM_PEQ - 10.32F*MODULO)
-#define H_DIENTE_PEQ	(float)(1.16F * MODULO)
+
+class manecilla
+{
+private:
+	float longitud;
+	float ancho;
+	Vec3 pos_eje;
+
+	// Funcion que dibuja la cara de una manecilla
+	void cara()
+	{
+		glBegin(GL_QUAD_STRIP);
+
+			glVertex3f(0, 0, 0);
+			glVertex3f(ancho, 0, 0);
+			glVertex3f(0, longitud, 0);
+			glVertex3f(ancho, longitud, 0);
+			glVertex3f(0, 0, 0);
+
+		glEnd();
+	}
+
+	// Funcion que dibuja las uniones de una manecilla
+	void uniones()
+	{
+		glBegin(GL_QUAD_STRIP);
+
+			glVertex3f(0, 0, 0);
+			glVertex3f(ancho, 0, 0);	
+			glVertex3f(0, ancho, 0);
+			glVertex3f(ancho, ancho, 0);
+			glVertex3f(0, 0, 0);
+
+		glEnd();
+	}
+
+
+public:
+
+	// Constructor que instancia manecilla asignandole sus parametros
+	manecilla(float longitud, float ancho, Vec3 pos_eje)
+	{
+		this->longitud = longitud;
+		this->ancho = ancho;
+		this->pos_eje.x = pos_eje.x;
+		this->pos_eje.y = pos_eje.y;
+		this->pos_eje.z = pos_eje.z;
+	}
+
+	// Funcion que dibuja una manecilla completa
+	void dibujar()
+	{
+		// Pintamos de negro los poligonos
+		glColor3f(0, 0, 0);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+		// Primera cara de la manecilla
+		cara();
+
+		// Segunda cara de la manecilla
+		glPushMatrix();
+		glTranslatef(0, 0, ancho);
+		cara();
+		glPopMatrix();
+
+		// Tercera cara de la manecilla
+		glPushMatrix();
+		glTranslatef(0, 0, ancho);
+		glRotatef(90, 0, 1, 0);
+		cara();
+		glPopMatrix();
+
+		// Cuarta cara de la manecilla
+		glPushMatrix();
+		glTranslatef(ancho, 0, ancho);
+		glRotatef(90, 0, 1, 0);
+		cara();
+		glPopMatrix();
+
+		// Uniones de la manecilla
+		glPushMatrix();
+		glRotatef(90, 1, 0, 0);
+		uniones();
+		glPopMatrix();
+
+		glPushMatrix();
+		glTranslatef(0, longitud, 0);
+		glRotatef(90, 1, 0, 0);
+		uniones();
+		glPopMatrix();
+
+		// Dibujamos en alambrico blanco las uniones
+		glColor3f(1, 1, 1);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		
+		// Uniones de la manecilla
+		glPushMatrix();
+		glRotatef(90, 1, 0, 0);
+		uniones();
+		glPopMatrix();
+
+		glPushMatrix();
+		glTranslatef(0, longitud, 0);
+		glRotatef(90, 1, 0, 0);
+		uniones();
+		glPopMatrix();
+
+	}
+
+};
 
 
 class engranaje
@@ -189,39 +302,27 @@ public:
 	// Funcion que dibuja un engranaje completo
 	void dibujar()
 	{
-		// Primera cara del engranaje
-		glPushMatrix();
-		glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT); 
+		// Pintamos de negro los poligonos
 		glColor3f(0, 0, 0);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+		// Primera cara del engranaje
 		cara(coorpeque, coormed, coorgrande);
-		glPopAttrib();		
-		glPopMatrix();
 		 
 		// Segunda cara del engranaje
 		glPushMatrix();
 		glTranslatef(0, 0, 0.3);
-		glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT); 
-		glColor3f(0, 0, 0);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		cara(coorpeque, coormed, coorgrande);
-		glPopAttrib();
 		glPopMatrix();
 
 		// Uniones Interiores y exteriores del engranaje
-		glPushMatrix();
-		glColor3f(0, 0, 0);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		uniones_interiores(coorpeque, coormed, coorgrande);
-		glColor3f(0, 0, 0);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		uniones_exteriores(coorpeque, coormed, coorgrande);
-		glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT); 
+
+		// Uniones exteriores del engranaje en modo alambrico y blancas
 		glColor3f(1, 1, 1);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		uniones_exteriores(coorpeque, coormed, coorgrande);
-		glPopMatrix();
-
 	}
 
 };
@@ -266,6 +367,8 @@ void update()
 	// Tiempo transcurrido
 	float tiempo_transcurrido = (ahora - antes) / 1000.0f;
 
+	// A partir del engranaje de minutos
+	/*
 	// Velocidad_corona = 1 vuelta/hora
 	gradosCorona += omega / 3600.0F * 360.0F * tiempo_transcurrido;   
 
@@ -273,8 +376,19 @@ void update()
 	gradosPinyonMin += ((omega / 3600.0F * 360.0F * tiempo_transcurrido) * DIAM_EXT_GRAN) / DIAM_PRIM_PEQ;
 
 	// Velocidad_pinyon = 1 vuelta/minuto
-	//gradosPinyon += omega / 60.0F * 360.0F * tiempo_transcurrido;		
-	gradosPinyon += ((((omega / 3600.0F * 360.0F * tiempo_transcurrido) * DIAM_EXT_GRAN) / DIAM_PRIM_PEQ) * DIAM_EXT_MED) / DIAM_PRIM_PEQ;
+	gradosPinyon += omega / 60.0F * 360.0F * tiempo_transcurrido;		
+	//gradosPinyon += ((((omega / 3600.0F * 360.0F * tiempo_transcurrido) * DIAM_EXT_GRAN) / DIAM_PRIM_PEQ) * DIAM_EXT_MED) / DIAM_PRIM_PEQ;
+	*/
+
+	// A partir del engranaje de segundos
+	
+	gradosPinyon += omega / 60.0F * 360.0F * tiempo_transcurrido;
+
+	gradosPinyonMin += (((omega / 60.0F * 360.0F) * tiempo_transcurrido) * N_DIENTES_PEQ) / N_DIENTES_MED;
+
+	gradosCorona += omega / 3600.0F * 360.0F * tiempo_transcurrido;
+	//gradosCorona += ((((omega / 60.0F * 360.0F) * tiempo_transcurrido) * N_DIENTES_PEQ) / N_DIENTES_MED) * DIAM_PRIM_PEQ / DIAM_EXT_GRAN;
+
 
 	// Velocidad_camara = 1 vuelta/minuto
 	gradosCamara += omega / 60.0F * 360.0F * tiempo_transcurrido;         
@@ -335,11 +449,22 @@ void display()
 	engranaje en_peq(N_DIENTES_PEQ, DIAM_EXT_PEQ, DIAM_PRIM_PEQ, DIAM_EJE_PEQ);
 	engranaje en_med(N_DIENTES_MED, DIAM_EXT_MED, DIAM_PRIM_MED, DIAM_EJE_MED);
 
+	// Instanciamos manecillas de segundos y minutos 
+	manecilla man_seg(1.0F, 0.2F, Vec3(2*((DIAM_EXT_GRAN+DIAM_EXT_PEQ) - (DIAM_EXT_GRAN-DIAM_PRIM_GRAN)), 0.0F, 0.0F));
+	manecilla man_min(4.0F, 0.2F, Vec3(0.0F, 0.0F, 0.0F));
+
 	// Dibujar engranaje grande (corona minutos)
 	glPushMatrix();
 	glRotatef(-gradosCorona, 0, 0, 1);														// Rotacion de la corona
 	glRotatef((PI / (float)N_DIENTES_GRAN), 0, 0, 1);										// Rotamos PI/n_dientes para que encajen
 	en_grande.dibujar();
+	glPopMatrix();
+
+	// Dibujar manecilla minutos (corona minutos)
+	glPushMatrix();
+	glTranslatef(0, 0, 0.32);
+	glRotatef(-gradosCorona, 0, 0, 1);														// Rotacion de la corona
+	man_min.dibujar();
 	glPopMatrix();
 
 	// Trasladamos 'Diametros ext - altura_diente' en x
@@ -368,6 +493,13 @@ void display()
 	glPushMatrix();
 	glRotatef(-gradosPinyon, 0, 0, 1);														// Rotacion del pinyon de segundos 
 	en_peq.dibujar();
+	glPopMatrix();
+
+	// Dibujar manecilla segundos
+	glPushMatrix();
+	glTranslatef(0, 0, 0.32);
+	glRotatef(-gradosPinyon, 0, 0, 1);														// Rotacion del pinyon de segundos 
+	man_seg.dibujar();
 	glPopMatrix();
 
 	// Trasladamos 'anchura_diente' en -z
