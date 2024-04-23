@@ -25,29 +25,23 @@ static float gradosPinyon =		0.0F;
 static float gradosPinyonMin =	0.0F;
 static float gradosCamara =		0.0F;
 
-// Velocidades engranajes en rad/s
-static const float vel_min = 0.001745F; 
-static const float vel_seg = 0.10572F;  
-
-
 // Parametros de los engranajes
 #define MODULO			0.04F
 
 // Parametros del engranaje grande (corona de minutos)
-#define N_DIENTES_GRAN  81
+#define N_DIENTES_GRAN  60
 #define DIAM_PRIM_GRAN  (float)(MODULO * N_DIENTES_GRAN)
 #define DIAM_EXT_GRAN	(float)(DIAM_PRIM_GRAN + 2.0F*MODULO)
 #define DIAM_EJE_GRAN	(float)(DIAM_PRIM_GRAN - 60.32F*MODULO)
 
 // Parametros del engranaje mediano
-#define N_DIENTES_MED   35
+#define N_DIENTES_MED   10
 #define DIAM_PRIM_MED   (float)(MODULO * N_DIENTES_MED)
 #define DIAM_EXT_MED	(float)(DIAM_PRIM_MED + 2.0F*MODULO)
 #define DIAM_EJE_MED	(float)(DIAM_PRIM_MED - 30.32F*MODULO)
 
 // Parametros del engranaje pequenyo (pinyon de segundos)
-//#define N_DIENTES_PEQ   (int)sqrt(vel_min*DIAM_PRIM_GRAN*DIAM_PRIM_MED / vel_seg)
-#define N_DIENTES_PEQ   7
+#define N_DIENTES_PEQ   6
 #define DIAM_PRIM_PEQ   (float)(MODULO * N_DIENTES_PEQ)
 #define DIAM_EXT_PEQ	(float)(DIAM_PRIM_PEQ + 2.0F*MODULO)
 #define DIAM_EJE_PEQ	(float)(DIAM_PRIM_PEQ - 10.32F*MODULO)
@@ -366,29 +360,16 @@ void update()
 
 	// Tiempo transcurrido
 	float tiempo_transcurrido = (ahora - antes) / 1000.0f;
-
-	// A partir del engranaje de minutos
-	/*
-	// Velocidad_corona = 1 vuelta/hora
-	gradosCorona += omega / 3600.0F * 360.0F * tiempo_transcurrido;   
-
-	// Velocidad_pinyon = vel_corona * n_dien_corona/n_dien_pinyon
-	gradosPinyonMin += ((omega / 3600.0F * 360.0F * tiempo_transcurrido) * DIAM_EXT_GRAN) / DIAM_PRIM_PEQ;
-
-	// Velocidad_pinyon = 1 vuelta/minuto
-	gradosPinyon += omega / 60.0F * 360.0F * tiempo_transcurrido;		
-	//gradosPinyon += ((((omega / 3600.0F * 360.0F * tiempo_transcurrido) * DIAM_EXT_GRAN) / DIAM_PRIM_PEQ) * DIAM_EXT_MED) / DIAM_PRIM_PEQ;
-	*/
-
-	// A partir del engranaje de segundos
 	
-	gradosPinyon += omega / 60.0F * 360.0F * tiempo_transcurrido;
+	// Velocidad_corona_min = 60 * 1 vuelta/hora
+	gradosCorona += 60.0F *(omega / 3600.0F * 360.0F * tiempo_transcurrido);   
 
-	gradosPinyonMin += (((omega / 60.0F * 360.0F) * tiempo_transcurrido) * N_DIENTES_PEQ) / N_DIENTES_MED;
+	// 60 * Velocidad_pinyon = 60 * vel_corona * n_dien_corona/n_dien_pinyon
+	gradosPinyonMin += 60.0F * ((omega / 3600.0F * 360.0F * tiempo_transcurrido) * (N_DIENTES_GRAN / N_DIENTES_MED));
 
-	gradosCorona += omega / 3600.0F * 360.0F * tiempo_transcurrido;
-	//gradosCorona += ((((omega / 60.0F * 360.0F) * tiempo_transcurrido) * N_DIENTES_PEQ) / N_DIENTES_MED) * DIAM_PRIM_PEQ / DIAM_EXT_GRAN;
-
+	// Velocidad_pinyon_seg = 60 * 1 vuelta/minuto
+	gradosPinyon += 60.0F * (((omega / 3600.0F * 360.0F * tiempo_transcurrido) * (N_DIENTES_GRAN / N_DIENTES_MED))
+		* (N_DIENTES_GRAN / N_DIENTES_PEQ));
 
 	// Velocidad_camara = 1 vuelta/minuto
 	gradosCamara += omega / 60.0F * 360.0F * tiempo_transcurrido;         
@@ -433,10 +414,10 @@ void display()
 
 	// Para que gire 1 vuelta/min alrededor del eje y
 	Vec3 camPosition(15 * cosf(rad(gradosCamara)), 1, -15 * sinf(rad(gradosCamara)));
-	gluLookAt(camPosition.x, camPosition.y, camPosition.z, 0, 0, 0, 0, 1, 0); 
+	//gluLookAt(camPosition.x, camPosition.y, camPosition.z, 0, 0, 0, 0, 1, 0); 
 	
 	// Para que la camara este estatica 
-	//gluLookAt(1, 1, 15, 0, 0, 0, 0, 1, 0);									  
+	gluLookAt(1, 1, 15, 0, 0, 0, 0, 1, 0);									  
 
 
 	ejes();
@@ -456,62 +437,57 @@ void display()
 	// Dibujar engranaje grande (corona minutos)
 	glPushMatrix();
 	glRotatef(-gradosCorona, 0, 0, 1);														// Rotacion de la corona
-	glRotatef((PI / (float)N_DIENTES_GRAN), 0, 0, 1);										// Rotamos PI/n_dientes para que encajen
+	glRotatef((180.0F / (float)N_DIENTES_GRAN), 0, 0, 1);										// Rotamos PI/n_dientes para que encajen
 	en_grande.dibujar();
+	glPopMatrix();
+
+	// Dibujar engranaje pequeño
+	glPushMatrix();
+	glTranslatef(0, 0, 0.32);
+	glRotatef(-gradosPinyon, 0, 0, 1);														// Rotacion del pinyon de segundos 
+	en_peq.dibujar();
 	glPopMatrix();
 
 	// Dibujar manecilla minutos (corona minutos)
 	glPushMatrix();
-	glTranslatef(0, 0, 0.32);
+	glTranslatef(0, 0, 0.64);
 	glRotatef(-gradosCorona, 0, 0, 1);														// Rotacion de la corona
 	man_min.dibujar();
 	glPopMatrix();
 
-	// Trasladamos 'Diametros ext - altura_diente' en x
-	glTranslatef((DIAM_EXT_GRAN + DIAM_EXT_PEQ) - (DIAM_EXT_GRAN - DIAM_PRIM_GRAN), 0, 0); 
-
-	// Dibujar engranaje pequeño
-	glPushMatrix();
-	glRotatef(gradosPinyonMin, 0, 0, 1);													// Rotacion del pinyon de la corona de min
-	en_peq.dibujar();
-	glPopMatrix();
-
-	// Trasladamos 'anchura_diente' en -z
-	glTranslatef(0, 0, -0.32);
-
-	// Dibujar engranaje mediano
-	glPushMatrix();
-	glRotatef(gradosPinyonMin, 0, 0, 1);													// Rotacion del pinyon de la corona de min
-	glRotatef((PI / (float)N_DIENTES_MED), 0, 0, 1);										// Rotamos PI/n_dientes para que encajen
-	en_med.dibujar();
-	glPopMatrix();
-
-	// Trasladamos 'Diametros ext - altura_diente' en x
-	glTranslatef((DIAM_EXT_MED + DIAM_EXT_PEQ) - (DIAM_EXT_MED - DIAM_PRIM_MED), 0, 0); 
-
-	// Dibujar engranaje pequeño
-	glPushMatrix();
-	glRotatef(-gradosPinyon, 0, 0, 1);														// Rotacion del pinyon de segundos 
-	en_peq.dibujar();
-	glPopMatrix();
-
 	// Dibujar manecilla segundos
 	glPushMatrix();
-	glTranslatef(0, 0, 0.32);
+	glTranslatef(0, 0, 0.96);
 	glRotatef(-gradosPinyon, 0, 0, 1);														// Rotacion del pinyon de segundos 
 	man_seg.dibujar();
 	glPopMatrix();
 
-	// Trasladamos 'anchura_diente' en -z
-	glTranslatef(0, 0, -0.32);
+	// Trasladamos 'Diametros ext - altura_diente' en x
+	glTranslatef((DIAM_EXT_GRAN + DIAM_EXT_MED) - (DIAM_EXT_GRAN - DIAM_PRIM_GRAN), 0, 0); 
 
 	// Dibujar engranaje mediano
 	glPushMatrix();
-	glRotatef(-gradosPinyon, 0, 0, 1);														// Rotacion del pinyon de segundos
-	glRotatef((PI / (float)N_DIENTES_MED), 0, 0, 1);										// Rotamos PI/n_dientes para que encajen
+	glRotatef(gradosPinyonMin, 0, 0, 1);													// Rotacion del pinyon de la corona de min
+	//glRotatef((PI / (float)N_DIENTES_MED), 0, 0, 1);										// Rotamos PI/n_dientes para que encajen
 	en_med.dibujar();
 	glPopMatrix();
 
+	// Trasladamos 'anchura_diente' en -z
+	glTranslatef(0, 0, -0.32);
+
+	// Dibujar engranaje grande (corona minutos)
+	glPushMatrix();
+	glRotatef(gradosPinyonMin, 0, 0, 1);														// Rotacion de la corona
+	glRotatef((180.0F / (float)N_DIENTES_GRAN), 0, 0, 1);										// Rotamos PI/n_dientes para que encajen
+	en_grande.dibujar();
+	glPopMatrix();
+
+	// Trasladamos 'Diametros ext - altura_diente' en x
+	glTranslatef((DIAM_EXT_GRAN + DIAM_EXT_PEQ) - (DIAM_EXT_MED - DIAM_PRIM_MED), 0, 0); 
+
+	// Dibujar engranaje pequeño
+	glRotatef(-gradosPinyon, 0, 0, 1);														// Rotacion del pinyon de segundos 
+	en_peq.dibujar();
 	
 	muestraFPS();
 
