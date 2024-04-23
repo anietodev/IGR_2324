@@ -486,7 +486,7 @@ void display()
 	engranaje en_seg(N_DIENTES_PIN4, DIAM_EXT_PIN4, DIAM_PRIM_PIN4, DIAM_EJE_PIN4);
 
 	// Instanciamos manecillas de segundos y minutos 
-	manecilla man_min(4.0F, 0.2F, Vec3(0.0F, 0.0F, 0.0F));
+	manecilla man_min(3.0F, 0.2F, Vec3(0.0F, 0.0F, 0.0F));
 	manecilla man_seg(1.0F, 0.2F, Vec3(0.0F, 0.0F, 0.2F));
 
 	// Dibujar engranaje grande (corona minutos)
@@ -551,7 +551,7 @@ void display()
 	glPopMatrix();
 
 	// Trasladamos 'Diametros ext - altura_diente' en -x
-	glTranslatef(-((DIAM_EXT_COR2 + DIAM_EXT_PIN3) - (DIAM_EXT_COR2 - DIAM_PRIM_COR2)), 0, 0);
+	glTranslatef(((DIAM_EXT_COR2 + DIAM_EXT_PIN3) - (DIAM_EXT_COR2 - DIAM_PRIM_COR2)), 0, 0);
 
 	// Dibujar engranaje pinyon 3
 	glPushMatrix();
