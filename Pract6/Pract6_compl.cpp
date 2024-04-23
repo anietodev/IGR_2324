@@ -347,10 +347,11 @@ public:
 		uniones_interiores(coorpeque, coormed, coorgrande);
 		uniones_exteriores(coorpeque, coormed, coorgrande);
 
-		// Uniones exteriores del engranaje en modo alambrico y blancas
+		// Uniones exteriores e interiores del engranaje en modo alambrico y blancas
 		glColor3f(1, 1, 1);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		uniones_exteriores(coorpeque, coormed, coorgrande);
+		uniones_interiores(coorpeque, coormed, coorgrande);
 	}
 
 };
@@ -507,7 +508,7 @@ void display()
 	glTranslatef(0, 0, 0.32);
 	glRotatef(-gradosPinyonSeg, 0, 0, 1);														// Rotacion del pinyon de segundos 
 	en_seg.dibujar();
-	glTranslatef(0, 0, 0.64);
+	glTranslatef(0, 0, 0.52);
 	man_seg.dibujar();
 	glPopMatrix();
 
