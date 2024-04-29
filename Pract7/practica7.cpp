@@ -183,11 +183,11 @@ void update()
 	float tiempo_transcurrido = (ahora - antes) / 1000.0f;
 
 	// Calcular desplazamiento
-	posAct[0] += vel * tiempo_transcurrido;
+	posAct[0] = vel * tiempo_transcurrido;
 
 	// Calcular rotación
 	posAct[1] += (alfav * 360.0F) * tiempo_transcurrido;
-	// posAct[1] = (int)posAct[1] % 360;
+	
 	// Asegurarse de que el ángulo esté en el rango -180° a 180°
 	while (posAct[1] > 180.0f) {
 		posAct[1] -= 360.0f;
@@ -196,15 +196,14 @@ void update()
 		posAct[1] += 360.0f;
 	}
 	
-	//posAct[1] += alfav * (1.0f / 360.0F * tiempo_transcurrido);
 
 	// Actualizo vector de posicion de la camara
-	camPosition.x = posAct[0] * cosf(rad(posAct[1]));
-	camPosition.z = -posAct[0] * sinf(rad(posAct[1]));
+	camPosition.x = camPosition.x + posAct[0] * cosf(rad(posAct[1]));
+	camPosition.z = camPosition.z - posAct[0] * sinf(rad(posAct[1]));
 
 	// Actualizo vector del punto central al que se mira 
 	camLookAt.x = cosf(rad(posAct[1])) + camPosition.x;
-	camLookAt.z = -1 -sinf(rad(posAct[1])) + camPosition.z;
+	camLookAt.z =  -sinf(rad(posAct[1])) + camPosition.z;
 
 	antes = ahora;
 
