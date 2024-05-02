@@ -233,7 +233,7 @@ void init()
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
 
 	// Configuracion del motor de render 
-	glClearColor(0.0f, 0.0f, 0.3f, 1.0f);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
 }
 
@@ -314,7 +314,7 @@ void display()
 
 	glPushMatrix();
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glColor3fv(BLANCO);
+	glColor3fv(NEGRO);
 	quad(v0, v1, v2, v3, resx, resy);
 	glPopMatrix();
 	
