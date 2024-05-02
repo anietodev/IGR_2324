@@ -37,8 +37,8 @@ static enum { ALAMBRICO, SOLIDO, DOBLE } modo;
 static enum { NOMOV, UP, DOWN } direccion;
 static enum { NOROT, RIGHT, LEFT } rotacion;
 
-static Vec3 camPosition(0.0f, 1.0f, 0.0f);
-static Vec3 camLookAt(0.0f, 1.0f, -1.0f);
+static Vec3 camPosition(0.0f, 0.0f, 1.0f);
+static Vec3 camLookAt(0.0f, 1.0f, 1.0f);
 static float giroxTR = 0, giroyTR = 0, giroxTA = 0, giroyTA = 0;
 int xanterior, yanterior;
 static float alfav = 0.0f;	// º
@@ -61,12 +61,16 @@ private:
 	{
 		glBegin(GL_QUAD_STRIP);
 
+		GLfloat v0[3] = {0.0f, 0.0f, 0.0f}, v1[3] = { 0.0f, longitud, 0.0f},
+			v2[3] = { ancho, 0.0f, 0.0f }, v3[3] = { ancho, longitud, 0.0f };
+		quad(v0, v1, v2, v3, 10.0f);
+		/*
 		glVertex3f(0, 0, 0);
 		glVertex3f(ancho, 0, 0);
 		glVertex3f(0, longitud, 0);
 		glVertex3f(ancho, longitud, 0);
 		glVertex3f(0, 0, 0);
-
+		*/
 		glEnd();
 	}
 
@@ -199,11 +203,11 @@ void update()
 
 	// Actualizo vector de posicion de la camara
 	camPosition.x = camPosition.x + posAct[0] * cosf(rad(posAct[1]));
-	camPosition.z = camPosition.z - posAct[0] * sinf(rad(posAct[1]));
+	camPosition.y = camPosition.y - posAct[0] * sinf(rad(posAct[1]));
 
 	// Actualizo vector del punto central al que se mira 
 	camLookAt.x = cosf(rad(posAct[1])) + camPosition.x;
-	camLookAt.z =  -sinf(rad(posAct[1])) + camPosition.z;
+	camLookAt.y =  -sinf(rad(posAct[1])) + camPosition.y;
 
 	antes = ahora;
 
@@ -297,7 +301,7 @@ void display()
 
 	// Vec3 camPosition(posAct[0] * cosf(rad(posAct[1])), 1.0f, -posAct[0] * sinf(rad(posAct[1])));
 	// gluLookAt(camPosition.x, camPosition.y, camPosition.z, 2.0f * camPosition.x, camPosition.y, -1 + 2.0f * camPosition.z, 0, 1, 0);
-	gluLookAt(camPosition.x, camPosition.y, camPosition.z, camLookAt.x, camLookAt.y, camLookAt.z, 0, 1, 0);
+	gluLookAt(camPosition.x, camPosition.y, camPosition.z, camLookAt.x, camLookAt.y, camLookAt.z, 0, 0, 1);
 
 	// Dibujar ejes
 	ejes();
@@ -309,8 +313,8 @@ void display()
 	// Construccion Plano XY
 
 	int resx = 100, resy = 100;
-	GLfloat v0[3] = {-COORXY, 0.0f, -COORXY }, v1[3] = { COORXY, 0.0f, -COORXY },
-		v2[3] =  { COORXY, 0.0f, COORXY }, v3[3] = { -COORXY, 0.0f, COORXY };
+	GLfloat v0[3] = {-COORXY, -COORXY, 0.0f }, v1[3] = { COORXY, -COORXY, 0.0f },
+		v2[3] =  { COORXY, COORXY, 0.0f }, v3[3] = { -COORXY, COORXY, 0.0f };
 
 	glPushMatrix();
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -324,20 +328,24 @@ void display()
 	glColor3fv(NEGRO);
 
 	glPushMatrix();
-	glTranslatef(-2 * ANCHO_CONT, 0, -COORXY);
+	glTranslatef(-2 * ANCHO_CONT, -COORXY, 0);
 	for (int i = 10; i > 0; i--)
 	{
-		glTranslatef(0, 0, 2 * ANCHO_CONT);
-		c1.dibujar();
+		glTranslatef(0, 2 * ANCHO_CONT, 0);
+		//glRotatef(90.0f, 1, 0, 0);
+		//glutSolidCube();
+		glutSolidCylinder(ANCHO_CONT, LONG_CONT, 20, 20);
+		//c1.dibujar();
 	}
 	glPopMatrix();
 
 	glPushMatrix();
-	glTranslatef(2 * ANCHO_CONT, 0, -COORXY);
+	glTranslatef(2 * ANCHO_CONT, -COORXY, 0);
 	for (int i = 10; i > 0; i--)
 	{
-		glTranslatef(0, 0, 2 * ANCHO_CONT);
-		c1.dibujar();
+		glTranslatef(0, 2 * ANCHO_CONT, 0);
+		glutSolidCylinder(ANCHO_CONT, LONG_CONT, 20, 20);
+		//c1.dibujar();
 	}
 	glPopMatrix();
 
@@ -369,22 +377,22 @@ void display()
 	{
 		if (vel < 0.0f)
 		{
-			alfav = 0.02f;
+			alfav = -0.02f;
 		}
 		else
 		{
-			alfav = -0.02f;
+			alfav = 0.02f;
 		}
 	}
 	else if (rotacion == LEFT)
 	{
 		if (vel < 0.0f)
 		{
-			alfav = -0.02f;
+			alfav = 0.02f;
 		}
 		else
 		{
-			alfav = 0.02f;
+			alfav = -0.02f;
 		}
 	}
 	else 
